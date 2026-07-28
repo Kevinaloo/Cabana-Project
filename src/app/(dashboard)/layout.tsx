@@ -1,28 +1,24 @@
-import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
+
+const SESSION_TOKEN = 'cabana_session_v1_secure'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const cookieStore = await cookies()
+  const auth = cookieStore.get('cabana_auth')?.value
 
-  if (!user) {
+  if (auth !== SESSION_TOKEN) {
     redirect('/login')
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#0d1526', overflow: 'hidden' }}>
-      <Sidebar user={user} profile={profile} />
+      <Sidebar />
       <main style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: '24px 20px', maxWidth: 1200, margin: '0 auto' }} className="main-content">
           {children}
@@ -30,9 +26,7 @@ export default async function DashboardLayout({
       </main>
       <style>{`
         @media (max-width: 768px) {
-          .main-content {
-            padding: 80px 16px 24px !important;
-          }
+          .main-content { padding: 80px 16px 24px !important; }
         }
       `}</style>
     </div>
