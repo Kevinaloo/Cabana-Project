@@ -27,18 +27,14 @@ export default function LoginPage() {
       return
     }
 
-    // Sign in with Supabase using the fixed account
     const { error: authError } = await supabase.auth.signInWithPassword({
       email: 'admin@cabanafinance.co',
       password: VALID_PASSWORD,
     })
 
     if (authError) {
-      // If Supabase auth fails, still allow local session via localStorage
-      // (fallback for demo mode)
-      sessionStorage.setItem('cabana_auth', '1')
-      router.push('/dashboard')
-      router.refresh()
+      setError('Sign in failed. Please try again.')
+      setLoading(false)
       return
     }
 
