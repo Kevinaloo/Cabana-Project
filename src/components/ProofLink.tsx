@@ -3,10 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 
-interface Props {
-  path: string
-  filename: string
-}
+interface Props { path: string; filename: string }
 
 export default function ProofLink({ path, filename }: Props) {
   const [loading, setLoading] = useState(false)
@@ -14,22 +11,19 @@ export default function ProofLink({ path, filename }: Props) {
 
   async function openProof() {
     setLoading(true)
-    const { data } = await supabase.storage
-      .from('transaction-proofs')
-      .createSignedUrl(path, 60)
-    if (data?.signedUrl) {
-      window.open(data.signedUrl, '_blank')
-    }
+    // Since bucket is public, just construct the public URL
+    const { data } = supabase.storage.from('finance-proofs').getPublicUrl(path)
+    if (data?.publicUrl) window.open(data.publicUrl, '_blank')
     setLoading(false)
   }
 
   return (
-    <button
-      onClick={openProof}
-      disabled={loading}
-      className="text-blue-600 hover:text-blue-800 text-xs underline underline-offset-2 disabled:opacity-50"
-    >
-      {loading ? 'Opening...' : filename}
+    <button onClick={openProof} disabled={loading} style={{
+      color: '#10b981', fontSize: 12, background: 'none', border: 'none',
+      cursor: 'pointer', textDecoration: 'underline', opacity: loading ? 0.5 : 1,
+      padding: 0,
+    }}>
+      {loading ? 'Opening…' : filename}
     </button>
   )
 }

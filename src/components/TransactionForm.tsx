@@ -81,7 +81,7 @@ export default function TransactionForm({ type }: Props) {
         const ext = proofFile.name.split('.').pop()
         const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('transaction-proofs')
+          .from('finance-proofs')
           .upload(filename, proofFile)
         if (uploadError) throw new Error('Failed to upload proof: ' + uploadError.message)
         proof_url = uploadData.path
@@ -107,7 +107,7 @@ export default function TransactionForm({ type }: Props) {
         payload.project_purpose = form.project_purpose || null
       }
 
-      const { error: insertError } = await supabase.from('transactions').insert([payload])
+      const { error: insertError } = await supabase.from('finance_transactions').insert([payload])
       if (insertError) throw insertError
 
       setSuccess(true)

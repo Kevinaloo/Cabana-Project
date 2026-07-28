@@ -5,7 +5,7 @@ import type { Transaction } from '@/types'
 export default async function ReportsPage() {
   const supabase = await createClient()
   const { data: transactions } = await supabase
-    .from('transactions').select('*').order('date', { ascending: true })
+    .from('finance_transactions').select('*').order('date', { ascending: true })
 
   let running = 0
   const withBalance = (transactions ?? []).map((t: Transaction) => {
