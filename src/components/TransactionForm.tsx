@@ -107,8 +107,15 @@ export default function TransactionForm({ type }: Props) {
         payload.project_purpose = form.project_purpose || null
       }
 
-      const { error: insertError } = await supabase.from('transactions').insert([payload])
-      if (insertError) throw insertError
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Failed to save transaction')
+      }
 
       setSuccess(true)
       setTimeout(() => { router.push('/transactions'); router.refresh() }, 1200)
