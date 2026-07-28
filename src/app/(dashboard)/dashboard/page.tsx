@@ -4,7 +4,7 @@ import type { Transaction } from '@/types'
 
 async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: txns } = await supabase
-    .from('finance_transactions')
+    .from('transactions')
     .select('type, amount, date, description, category, payment_method')
     .order('date', { ascending: false })
 

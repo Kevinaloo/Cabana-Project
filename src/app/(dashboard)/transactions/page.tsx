@@ -5,7 +5,7 @@ import type { Transaction } from '@/types'
 export default async function TransactionsPage() {
   const supabase = await createClient()
   const { data: transactions } = await supabase
-    .from('finance_transactions').select('*')
+    .from('transactions').select('*')
     .order('date', { ascending: true })
     .order('created_at', { ascending: true })
 

@@ -11,9 +11,11 @@ export default function ProofLink({ path, filename }: Props) {
 
   async function openProof() {
     setLoading(true)
-    // Since bucket is public, just construct the public URL
-    const { data } = supabase.storage.from('finance-proofs').getPublicUrl(path)
-    if (data?.publicUrl) window.open(data.publicUrl, '_blank')
+    const { data, error } = await supabase.storage
+      .from('transaction-proofs')
+      .createSignedUrl(path, 60)
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
+    else if (error) console.error('Failed to open proof:', error.message)
     setLoading(false)
   }
 
