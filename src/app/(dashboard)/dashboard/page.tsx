@@ -12,7 +12,7 @@ async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
   const totalOut = txns?.filter(t => t.type === 'money_out').reduce((sum, t) => sum + t.amount, 0) ?? 0
   const balance = totalIn - totalOut
   const count = txns?.length ?? 0
-  const recent = txns?.slice(0, 5) ?? []
+  const recent = txns?.slice(0, 6) ?? []
 
   return { totalIn, totalOut, balance, count, recent }
 }
@@ -21,116 +21,150 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { totalIn, totalOut, balance, count, recent } = await getStats(supabase)
 
-  const stats = [
-    {
-      label: 'Total Investment Received',
-      value: formatCurrency(totalIn),
-      icon: '📈',
-      color: 'bg-emerald-50 border-emerald-100',
-      valueColor: 'text-emerald-700',
-    },
-    {
-      label: 'Total Money Spent',
-      value: formatCurrency(totalOut),
-      icon: '📉',
-      color: 'bg-red-50 border-red-100',
-      valueColor: 'text-red-700',
-    },
-    {
-      label: 'Current Balance',
-      value: formatCurrency(balance),
-      icon: '💰',
-      color: balance >= 0 ? 'bg-blue-50 border-blue-100' : 'bg-orange-50 border-orange-100',
-      valueColor: balance >= 0 ? 'text-blue-700' : 'text-orange-700',
-    },
-    {
-      label: 'Transactions',
-      value: count.toString(),
-      icon: '🔄',
-      color: 'bg-slate-50 border-slate-200',
-      valueColor: 'text-slate-700',
-    },
-  ]
+  const utilizationPct = totalIn > 0 ? Math.min((totalOut / totalIn) * 100, 100) : 0
+  const remainingPct = totalIn > 0 ? Math.min((balance / totalIn) * 100, 100) : 0
 
   return (
-    <div className="pt-14 md:pt-0">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500 text-sm mt-1">Overview of Cabana investment activity</p>
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '-0.4px' }}>
+          Dashboard
+        </h1>
+        <p style={{ fontSize: 14, color: '#475569', marginTop: 4 }}>
+          Overview of Cabana investment activity
+        </p>
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map(stat => (
-          <div key={stat.label} className={`rounded-2xl border p-4 md:p-5 ${stat.color}`}>
-            <div className="text-2xl mb-2">{stat.icon}</div>
-            <div className={`text-xl md:text-2xl font-bold ${stat.valueColor} mb-1`}>
-              {stat.value}
-            </div>
-            <div className="text-xs text-slate-500 font-medium">{stat.label}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 20 }} className="stats-grid">
+        {/* Total In */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.08) 100%)',
+          border: '1px solid rgba(16,185,129,0.25)',
+          borderRadius: 16, padding: '18px 16px'
+        }}>
+          <div style={{ fontSize: 22, marginBottom: 8 }}>📈</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#10b981', marginBottom: 4, letterSpacing: '-0.5px' }}>
+            {formatCurrency(totalIn)}
           </div>
-        ))}
+          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>Total Investment Received</div>
+        </div>
+
+        {/* Total Out */}
+        <div style={{
+          background: 'rgba(239,68,68,0.08)',
+          border: '1px solid rgba(239,68,68,0.2)',
+          borderRadius: 16, padding: '18px 16px'
+        }}>
+          <div style={{ fontSize: 22, marginBottom: 8 }}>📉</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#f87171', marginBottom: 4, letterSpacing: '-0.5px' }}>
+            {formatCurrency(totalOut)}
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>Total Money Spent</div>
+        </div>
+
+        {/* Balance */}
+        <div style={{
+          background: balance >= 0
+            ? 'linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(37,99,235,0.06) 100%)'
+            : 'rgba(245,158,11,0.08)',
+          border: `1px solid ${balance >= 0 ? 'rgba(59,130,246,0.25)' : 'rgba(245,158,11,0.25)'}`,
+          borderRadius: 16, padding: '18px 16px'
+        }}>
+          <div style={{ fontSize: 22, marginBottom: 8 }}>💰</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: balance >= 0 ? '#60a5fa' : '#fbbf24', marginBottom: 4, letterSpacing: '-0.5px' }}>
+            {formatCurrency(balance)}
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>Current Balance</div>
+        </div>
+
+        {/* Transactions */}
+        <div style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 16, padding: '18px 16px'
+        }}>
+          <div style={{ fontSize: 22, marginBottom: 8 }}>🔄</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#94a3b8', marginBottom: 4, letterSpacing: '-0.5px' }}>
+            {count}
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>Total Transactions</div>
+        </div>
       </div>
 
-      {/* Balance bar */}
+      {/* Fund Utilization */}
       {totalIn > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-6">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Fund Utilization</h2>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-xs text-slate-500 w-20 shrink-0">Spent</span>
-            <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
-              <div
-                className="h-full bg-blue-500 rounded-full transition-all"
-                style={{ width: `${Math.min((totalOut / totalIn) * 100, 100)}%` }}
-              />
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 16, padding: '20px', marginBottom: 20
+        }}>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#64748b', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Fund Utilization
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: '#64748b' }}>Spent</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#f87171' }}>{utilizationPct.toFixed(1)}%</span>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                <div style={{ width: `${utilizationPct}%`, height: '100%', background: 'linear-gradient(90deg, #ef4444, #f87171)', borderRadius: 999, transition: 'width 0.6s ease' }} />
+              </div>
             </div>
-            <span className="text-xs font-semibold text-slate-700 w-12 text-right">
-              {totalIn > 0 ? ((totalOut / totalIn) * 100).toFixed(1) : 0}%
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 w-20 shrink-0">Remaining</span>
-            <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
-              <div
-                className="h-full bg-emerald-400 rounded-full transition-all"
-                style={{ width: `${Math.min((balance / totalIn) * 100, 100)}%` }}
-              />
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: '#64748b' }}>Remaining</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#10b981' }}>{remainingPct.toFixed(1)}%</span>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                <div style={{ width: `${Math.max(remainingPct, 0)}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', borderRadius: 999, transition: 'width 0.6s ease' }} />
+              </div>
             </div>
-            <span className="text-xs font-semibold text-emerald-700 w-12 text-right">
-              {totalIn > 0 ? ((balance / totalIn) * 100).toFixed(1) : 0}%
-            </span>
           </div>
         </div>
       )}
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-2xl border border-slate-200">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-900">Recent Activity</h2>
+      <div style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 16, overflow: 'hidden'
+      }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ fontSize: 14, fontWeight: 600, color: '#f1f5f9', margin: 0 }}>Recent Activity</h2>
+          <span style={{ fontSize: 12, color: '#475569' }}>{recent.length} latest</span>
         </div>
         {recent.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
-            <div className="text-3xl mb-2">📋</div>
-            <p className="text-sm">No transactions yet</p>
+          <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
+            <p style={{ fontSize: 14, color: '#475569' }}>No transactions yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-50">
+          <div>
             {recent.map((t: { type: string; amount: number; date: string; description?: string; category?: string; payment_method?: string }, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-3.5">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  t.type === 'money_in' ? 'bg-emerald-50' : 'bg-red-50'
-                }`}>
-                  <span className="text-base">{t.type === 'money_in' ? '↑' : '↓'}</span>
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '14px 20px',
+                borderBottom: i < recent.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none'
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: t.type === 'money_in' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.12)',
+                  fontSize: 16, fontWeight: 700,
+                  color: t.type === 'money_in' ? '#10b981' : '#f87171'
+                }}>
+                  {t.type === 'money_in' ? '↑' : '↓'}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-slate-800 truncate">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {t.description || (t.type === 'money_in' ? t.payment_method : t.category) || '—'}
                   </div>
-                  <div className="text-xs text-slate-400">{formatDate(t.date)}</div>
+                  <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{formatDate(t.date)}</div>
                 </div>
-                <div className={`text-sm font-semibold ${
-                  t.type === 'money_in' ? 'text-emerald-600' : 'text-red-500'
-                }`}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: t.type === 'money_in' ? '#10b981' : '#f87171', flexShrink: 0 }}>
                   {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
                 </div>
               </div>
@@ -138,6 +172,12 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+
+      <style>{`
+        @media (min-width: 640px) {
+          .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
+        }
+      `}</style>
     </div>
   )
 }

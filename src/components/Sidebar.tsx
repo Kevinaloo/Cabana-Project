@@ -71,28 +71,36 @@ export default function Sidebar({ user, profile }: SidebarProps) {
     router.push('/login')
   }
 
-  const displayName = profile?.full_name || user.email?.split('@')[0] || 'User'
-  const role = profile?.role || 'founder'
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'Admin'
+  const role = profile?.role || 'Founder'
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 11,
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, boxShadow: '0 4px 14px rgba(16,185,129,0.3)'
+          }}>
+            <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <div className="font-bold text-slate-900 text-sm">Cabana Finance</div>
-            <div className="text-xs text-slate-400">Investment Tracker</div>
+            <div style={{ fontWeight: 700, color: '#f1f5f9', fontSize: 14, letterSpacing: '-0.2px' }}>Cabana Finance</div>
+            <div style={{ fontSize: 11, color: '#10b981', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 1 }}>
+              Investment Tracker
+            </div>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
         {navItems.map(item => {
           const active = pathname === item.href
           return (
@@ -100,11 +108,17 @@ export default function Sidebar({ user, profile }: SidebarProps) {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                active
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px', borderRadius: 10,
+                fontSize: 14, fontWeight: active ? 600 : 500,
+                textDecoration: 'none', transition: 'all 0.15s',
+                background: active ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
+                color: active ? 'white' : '#94a3b8',
+                boxShadow: active ? '0 4px 14px rgba(16,185,129,0.25)' : 'none',
+              }}
+              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = '#f1f5f9' }}
+              onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#94a3b8' } }}
             >
               {item.icon}
               {item.label}
@@ -114,21 +128,33 @@ export default function Sidebar({ user, profile }: SidebarProps) {
       </nav>
 
       {/* User */}
-      <div className="px-3 py-4 border-t border-slate-100">
-        <div className="flex items-center gap-3 px-3 py-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-blue-700 text-xs font-bold uppercase">
-              {displayName[0]}
-            </span>
+      <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 4 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, fontSize: 12, fontWeight: 700, color: 'white'
+          }}>
+            {displayName[0].toUpperCase()}
           </div>
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-slate-900 truncate">{displayName}</div>
-            <div className="text-xs text-slate-400 capitalize">{role}</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {displayName}
+            </div>
+            <div style={{ fontSize: 11, color: '#475569', textTransform: 'capitalize' }}>{role}</div>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 12px', borderRadius: 10, fontSize: 14, fontWeight: 500,
+            color: '#64748b', background: 'none', border: 'none', cursor: 'pointer',
+            transition: 'all 0.15s', textAlign: 'left'
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)'; (e.currentTarget as HTMLElement).style.color = '#f87171' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = '#64748b' }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -142,17 +168,30 @@ export default function Sidebar({ user, profile }: SidebarProps) {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div style={{
+        display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30,
+        background: 'rgba(10,15,30,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(12px)', padding: '12px 16px',
+        alignItems: 'center', justifyContent: 'space-between'
+      }} className="mobile-topbar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 9,
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <span className="font-bold text-slate-900 text-sm">Cabana Finance</span>
+          <span style={{ fontWeight: 700, color: '#f1f5f9', fontSize: 14 }}>Cabana Finance</span>
         </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-slate-100">
-          <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={() => setMobileOpen(!mobileOpen)} style={{
+          padding: 8, borderRadius: 8, background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', color: '#94a3b8'
+        }}>
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {mobileOpen
               ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -163,23 +202,40 @@ export default function Sidebar({ user, profile }: SidebarProps) {
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-20 bg-black/30"
-          onClick={() => setMobileOpen(false)}
-        />
+        <div onClick={() => setMobileOpen(false)} style={{
+          position: 'fixed', inset: 0, zIndex: 20, background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(2px)'
+        }} />
       )}
 
       {/* Mobile drawer */}
-      <div className={`md:hidden fixed top-0 left-0 z-20 w-72 h-full bg-white shadow-xl transform transition-transform duration-200 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="pt-14 h-full">
-          <SidebarContent />
-        </div>
+      <div style={{
+        position: 'fixed', top: 0, left: 0, zIndex: 25, width: 260, height: '100%',
+        background: '#0a0f1e', borderRight: '1px solid rgba(255,255,255,0.06)',
+        transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.2s ease', paddingTop: 56
+      }} className="mobile-drawer">
+        <SidebarContent />
       </div>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-60 bg-white border-r border-slate-200 flex-col flex-shrink-0">
+      <aside style={{
+        width: 240, background: '#0a0f1e',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', flexDirection: 'column', flexShrink: 0
+      }} className="desktop-sidebar">
         <SidebarContent />
       </aside>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-sidebar { display: none !important; }
+          .mobile-topbar { display: flex !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-drawer { display: none !important; }
+        }
+      `}</style>
     </>
   )
 }
