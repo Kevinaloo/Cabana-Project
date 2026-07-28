@@ -2,18 +2,28 @@ import TransactionForm from '@/components/TransactionForm'
 
 export default function MoneyOutPage() {
   return (
-    <div className="pt-14 md:pt-0">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
-            <span className="text-lg">↓</span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Record Expense</h1>
+    <div>
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, color: '#f87171',
+          }}>↓</div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '-0.4px' }}>
+            Record Expense
+          </h1>
         </div>
-        <p className="text-slate-500 text-sm">Log every expense paid out from the fund.</p>
+        <p style={{ fontSize: 14, color: '#475569', margin: 0 }}>
+          Log every expense paid out from the fund.
+        </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 max-w-2xl">
+      <div style={{
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 20, padding: '28px 24px', maxWidth: 680,
+      }}>
         <TransactionForm type="money_out" />
       </div>
     </div>

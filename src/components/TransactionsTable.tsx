@@ -5,8 +5,12 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import type { TransactionWithBalance } from '@/types'
 import ProofLink from './ProofLink'
 
-interface Props {
-  transactions: TransactionWithBalance[]
+interface Props { transactions: TransactionWithBalance[] }
+
+const inputStyle: React.CSSProperties = {
+  background: 'rgba(30,41,59,0.8)', border: '1.5px solid rgba(51,65,85,0.7)',
+  borderRadius: 10, padding: '10px 14px', fontSize: 14, color: '#f1f5f9',
+  outline: 'none', transition: 'border-color 0.2s',
 }
 
 export default function TransactionsTable({ transactions }: Props) {
@@ -15,133 +19,164 @@ export default function TransactionsTable({ transactions }: Props) {
   const [dateTo, setDateTo] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'money_in' | 'money_out'>('all')
 
-  const filtered = useMemo(() => {
-    return transactions.filter(t => {
-      if (typeFilter !== 'all' && t.type !== typeFilter) return false
-      if (dateFrom && t.date < dateFrom) return false
-      if (dateTo && t.date > dateTo) return false
-      if (search) {
-        const q = search.toLowerCase()
-        return (
-          (t.description || '').toLowerCase().includes(q) ||
-          (t.category || '').toLowerCase().includes(q) ||
-          (t.payment_method || '').toLowerCase().includes(q) ||
-          (t.reference_number || '').toLowerCase().includes(q) ||
-          (t.project_purpose || '').toLowerCase().includes(q)
-        )
-      }
-      return true
-    })
-  }, [transactions, search, dateFrom, dateTo, typeFilter])
+  const filtered = useMemo(() => transactions.filter(t => {
+    if (typeFilter !== 'all' && t.type !== typeFilter) return false
+    if (dateFrom && t.date < dateFrom) return false
+    if (dateTo && t.date > dateTo) return false
+    if (search) {
+      const q = search.toLowerCase()
+      return (
+        (t.description || '').toLowerCase().includes(q) ||
+        (t.category || '').toLowerCase().includes(q) ||
+        (t.payment_method || '').toLowerCase().includes(q) ||
+        (t.reference_number || '').toLowerCase().includes(q) ||
+        (t.project_purpose || '').toLowerCase().includes(q)
+      )
+    }
+    return true
+  }), [transactions, search, dateFrom, dateTo, typeFilter])
+
+  const hasFilters = search || dateFrom || dateTo || typeFilter !== 'all'
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200">
+    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
+
       {/* Filters */}
-      <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-3">
+      <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <input
-          type="text"
-          placeholder="Search transactions..."
-          value={search}
+          type="text" placeholder="Search transactions…" value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-900"
+          style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+          onFocus={e => { e.target.style.borderColor = '#10b981' }}
+          onBlur={e => { e.target.style.borderColor = 'rgba(51,65,85,0.7)' }}
         />
-        <div className="flex gap-2 flex-wrap">
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value as 'all' | 'money_in' | 'money_out')}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700"
-          >
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as typeof typeFilter)}
+            style={{ ...inputStyle, padding: '9px 12px', cursor: 'pointer' }}>
             <option value="all">All Types</option>
             <option value="money_in">Money In</option>
             <option value="money_out">Money Out</option>
           </select>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700"
-            title="From date"
+          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+            title="From date" style={{ ...inputStyle, padding: '9px 12px' }}
+            onFocus={e => { e.target.style.borderColor = '#10b981' }}
+            onBlur={e => { e.target.style.borderColor = 'rgba(51,65,85,0.7)' }}
           />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700"
-            title="To date"
+          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+            title="To date" style={{ ...inputStyle, padding: '9px 12px' }}
+            onFocus={e => { e.target.style.borderColor = '#10b981' }}
+            onBlur={e => { e.target.style.borderColor = 'rgba(51,65,85,0.7)' }}
           />
-          {(search || dateFrom || dateTo || typeFilter !== 'all') && (
-            <button
-              onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); setTypeFilter('all') }}
-              className="px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-100 border border-slate-200"
-            >
+          {hasFilters && (
+            <button onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); setTypeFilter('all') }}
+              style={{ ...inputStyle, padding: '9px 16px', cursor: 'pointer', color: '#94a3b8', border: '1.5px solid rgba(51,65,85,0.5)' }}>
               Clear
             </button>
           )}
         </div>
       </div>
 
-      <div className="text-xs text-slate-400 px-4 py-2 border-b border-slate-50">
+      {/* Count */}
+      <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 12, color: '#475569' }}>
         {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
-            <div className="text-3xl mb-2">🔍</div>
-            <p className="text-sm">No transactions found</p>
+      {/* Content */}
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '64px 20px' }}>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>🔍</div>
+          <p style={{ fontSize: 14, color: '#475569' }}>No transactions found</p>
+        </div>
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="txn-table" style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 14, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  {['Date', 'Type', 'Amount', 'Description', 'Proof', 'Balance'].map(h => (
+                    <th key={h} style={{ padding: '12px 16px', textAlign: h === 'Balance' ? 'right' : 'left', fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(t => (
+                  <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <td style={{ padding: '14px 16px', color: '#94a3b8', whiteSpace: 'nowrap', fontSize: 13 }}>{formatDate(t.date)}</td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+                        background: t.type === 'money_in' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.12)',
+                        color: t.type === 'money_in' ? '#10b981' : '#f87171',
+                      }}>
+                        {t.type === 'money_in' ? '↑ In' : '↓ Out'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px', fontWeight: 700, whiteSpace: 'nowrap', color: t.type === 'money_in' ? '#10b981' : '#f87171' }}>
+                      {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
+                    </td>
+                    <td style={{ padding: '14px 16px', color: '#94a3b8', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {t.description || t.category || t.payment_method || '—'}
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      {t.proof_url ? <ProofLink path={t.proof_url} filename={t.proof_filename || 'proof'} /> : <span style={{ color: '#334155', fontSize: 12 }}>—</span>}
+                    </td>
+                    <td style={{ padding: '14px 16px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', color: t.running_balance >= 0 ? '#60a5fa' : '#f59e0b' }}>
+                      {formatCurrency(t.running_balance)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-50 text-left">
-                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
-                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Type</th>
-                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
-                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Description</th>
-                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Proof</th>
-                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-right">Balance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filtered.map(t => (
-                <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(t.date)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      t.type === 'money_in'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-red-50 text-red-600'
-                    }`}>
+
+          {/* Mobile cards */}
+          <div className="txn-cards" style={{ display: 'none', flexDirection: 'column', gap: 1 }}>
+            {filtered.map(t => (
+              <div key={t.id} style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <div>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 600, marginBottom: 5,
+                      background: t.type === 'money_in' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.12)',
+                      color: t.type === 'money_in' ? '#10b981' : '#f87171',
+                    }}>
                       {t.type === 'money_in' ? '↑ In' : '↓ Out'}
                     </span>
-                  </td>
-                  <td className={`px-4 py-3 font-semibold whitespace-nowrap ${
-                    t.type === 'money_in' ? 'text-emerald-600' : 'text-red-500'
-                  }`}>
-                    {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600 hidden md:table-cell max-w-xs truncate">
-                    {t.description || t.category || t.payment_method || '—'}
-                  </td>
-                  <td className="px-4 py-3 hidden lg:table-cell">
-                    {t.proof_url ? (
-                      <ProofLink path={t.proof_url} filename={t.proof_filename || 'proof'} />
-                    ) : (
-                      <span className="text-slate-300 text-xs">—</span>
-                    )}
-                  </td>
-                  <td className={`px-4 py-3 font-semibold text-right whitespace-nowrap ${
-                    t.running_balance >= 0 ? 'text-slate-800' : 'text-orange-600'
-                  }`}>
-                    {formatCurrency(t.running_balance)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                    <div style={{ fontSize: 13, color: '#94a3b8' }}>{formatDate(t.date)}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: t.type === 'money_in' ? '#10b981' : '#f87171' }}>
+                      {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
+                      Bal: <span style={{ color: t.running_balance >= 0 ? '#60a5fa' : '#f59e0b', fontWeight: 600 }}>{formatCurrency(t.running_balance)}</span>
+                    </div>
+                  </div>
+                </div>
+                {(t.description || t.category || t.payment_method) && (
+                  <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+                    {t.description || t.category || t.payment_method}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <style>{`
+        @media (max-width: 640px) {
+          .txn-table { display: none !important; }
+          .txn-cards { display: flex !important; }
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+        option { background: #1e293b; color: #f1f5f9; }
+      `}</style>
     </div>
   )
 }
