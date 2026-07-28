@@ -1,19 +1,20 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { TransactionWithBalance } from '@/types'
-import ProofLink from './ProofLink'
 
 interface Props { transactions: TransactionWithBalance[] }
 
 const inputStyle: React.CSSProperties = {
   background: 'rgba(30,41,59,0.8)', border: '1.5px solid rgba(51,65,85,0.7)',
   borderRadius: 10, padding: '10px 14px', fontSize: 14, color: '#f1f5f9',
-  outline: 'none', transition: 'border-color 0.2s',
+  outline: 'none',
 }
 
 export default function TransactionsTable({ transactions }: Props) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -30,7 +31,8 @@ export default function TransactionsTable({ transactions }: Props) {
         (t.category || '').toLowerCase().includes(q) ||
         (t.payment_method || '').toLowerCase().includes(q) ||
         (t.reference_number || '').toLowerCase().includes(q) ||
-        (t.project_purpose || '').toLowerCase().includes(q)
+        (t.project_purpose || '').toLowerCase().includes(q) ||
+        (t.notes || '').toLowerCase().includes(q)
       )
     }
     return true
@@ -38,17 +40,19 @@ export default function TransactionsTable({ transactions }: Props) {
 
   const hasFilters = search || dateFrom || dateTo || typeFilter !== 'all'
 
+  function goToDetail(id: string) {
+    router.push(`/transactions/${id}`)
+  }
+
   return (
     <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
 
       {/* Filters */}
       <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <input
-          type="text" placeholder="Search transactions…" value={search}
+          type="text" placeholder="Search by description, category, reference, notes…" value={search}
           onChange={e => setSearch(e.target.value)}
           style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
-          onFocus={e => { e.target.style.borderColor = '#10b981' }}
-          onBlur={e => { e.target.style.borderColor = 'rgba(51,65,85,0.7)' }}
         />
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as typeof typeFilter)}
@@ -58,18 +62,12 @@ export default function TransactionsTable({ transactions }: Props) {
             <option value="money_out">Money Out</option>
           </select>
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-            title="From date" style={{ ...inputStyle, padding: '9px 12px' }}
-            onFocus={e => { e.target.style.borderColor = '#10b981' }}
-            onBlur={e => { e.target.style.borderColor = 'rgba(51,65,85,0.7)' }}
-          />
+            title="From date" style={{ ...inputStyle, padding: '9px 12px' }} />
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-            title="To date" style={{ ...inputStyle, padding: '9px 12px' }}
-            onFocus={e => { e.target.style.borderColor = '#10b981' }}
-            onBlur={e => { e.target.style.borderColor = 'rgba(51,65,85,0.7)' }}
-          />
+            title="To date" style={{ ...inputStyle, padding: '9px 12px' }} />
           {hasFilters && (
             <button onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); setTypeFilter('all') }}
-              style={{ ...inputStyle, padding: '9px 16px', cursor: 'pointer', color: '#94a3b8', border: '1.5px solid rgba(51,65,85,0.5)' }}>
+              style={{ ...inputStyle, padding: '9px 16px', cursor: 'pointer', color: '#94a3b8' }}>
               Clear
             </button>
           )}
@@ -77,11 +75,12 @@ export default function TransactionsTable({ transactions }: Props) {
       </div>
 
       {/* Count */}
-      <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 12, color: '#475569' }}>
-        {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
+      <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 12, color: '#475569', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span>{filtered.length} transaction{filtered.length !== 1 ? 's' : ''}</span>
+        <span style={{ color: '#1e293b' }}>·</span>
+        <span style={{ color: '#334155' }}>Click any row to view full details</span>
       </div>
 
-      {/* Content */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px 20px' }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}>🔍</div>
@@ -94,16 +93,27 @@ export default function TransactionsTable({ transactions }: Props) {
             <table style={{ width: '100%', fontSize: 14, borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  {['Date', 'Type', 'Amount', 'Description', 'Proof', 'Balance'].map(h => (
-                    <th key={h} style={{ padding: '12px 16px', textAlign: h === 'Balance' ? 'right' : 'left', fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                      {h}
-                    </th>
+                  {['Date', 'Type', 'Amount', 'Method / Category', 'Description', 'Ref / Project', 'Proof', 'Balance'].map(h => (
+                    <th key={h} style={{
+                      padding: '12px 16px', textAlign: h === 'Balance' ? 'right' : 'left',
+                      fontSize: 11, fontWeight: 600, color: '#475569',
+                      textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap',
+                    }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(t => (
-                  <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <tr
+                    key={t.id}
+                    onClick={() => goToDetail(t.id)}
+                    style={{
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      cursor: 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                    className="txn-row"
+                  >
                     <td style={{ padding: '14px 16px', color: '#94a3b8', whiteSpace: 'nowrap', fontSize: 13 }}>{formatDate(t.date)}</td>
                     <td style={{ padding: '14px 16px' }}>
                       <span style={{
@@ -118,11 +128,20 @@ export default function TransactionsTable({ transactions }: Props) {
                     <td style={{ padding: '14px 16px', fontWeight: 700, whiteSpace: 'nowrap', color: t.type === 'money_in' ? '#10b981' : '#f87171' }}>
                       {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
                     </td>
-                    <td style={{ padding: '14px 16px', color: '#94a3b8', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {t.description || t.category || t.payment_method || '—'}
+                    <td style={{ padding: '14px 16px', color: '#94a3b8', fontSize: 13 }}>
+                      {t.payment_method || t.category || '—'}
+                    </td>
+                    <td style={{ padding: '14px 16px', color: '#94a3b8', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13 }}>
+                      {t.description || <span style={{ color: '#334155' }}>—</span>}
+                    </td>
+                    <td style={{ padding: '14px 16px', color: '#64748b', fontSize: 12, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {t.reference_number || t.project_purpose || <span style={{ color: '#334155' }}>—</span>}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
-                      {t.proof_url ? <ProofLink path={t.proof_url} filename={t.proof_filename || 'proof'} /> : <span style={{ color: '#334155', fontSize: 12 }}>—</span>}
+                      {t.proof_url
+                        ? <span style={{ fontSize: 13, color: '#60a5fa' }}>📎 View</span>
+                        : <span style={{ color: '#334155', fontSize: 12 }}>—</span>
+                      }
                     </td>
                     <td style={{ padding: '14px 16px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', color: t.running_balance >= 0 ? '#60a5fa' : '#f59e0b' }}>
                       {formatCurrency(t.running_balance)}
@@ -136,8 +155,13 @@ export default function TransactionsTable({ transactions }: Props) {
           {/* Mobile cards */}
           <div className="txn-cards" style={{ display: 'none', flexDirection: 'column', gap: 1 }}>
             {filtered.map(t => (
-              <div key={t.id} style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+              <div
+                key={t.id}
+                onClick={() => goToDetail(t.id)}
+                style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
+                className="txn-card-mobile"
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -147,10 +171,10 @@ export default function TransactionsTable({ transactions }: Props) {
                     }}>
                       {t.type === 'money_in' ? '↑ In' : '↓ Out'}
                     </span>
-                    <div style={{ fontSize: 13, color: '#94a3b8' }}>{formatDate(t.date)}</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>{formatDate(t.date)}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: t.type === 'money_in' ? '#10b981' : '#f87171' }}>
+                    <div style={{ fontSize: 17, fontWeight: 700, color: t.type === 'money_in' ? '#10b981' : '#f87171' }}>
                       {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
                     </div>
                     <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
@@ -158,11 +182,23 @@ export default function TransactionsTable({ transactions }: Props) {
                     </div>
                   </div>
                 </div>
-                {(t.description || t.category || t.payment_method) && (
-                  <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-                    {t.description || t.category || t.payment_method}
-                  </div>
-                )}
+                {/* Key details row */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+                  {(t.payment_method || t.category) && (
+                    <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.05)', color: '#64748b', padding: '2px 8px', borderRadius: 6 }}>
+                      {t.payment_method || t.category}
+                    </span>
+                  )}
+                  {t.description && (
+                    <span style={{ fontSize: 11, color: '#64748b' }}>{t.description}</span>
+                  )}
+                  {t.proof_url && (
+                    <span style={{ fontSize: 11, color: '#60a5fa' }}>📎 Proof</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: '#334155', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  Tap to view details →
+                </div>
               </div>
             ))}
           </div>
@@ -174,6 +210,8 @@ export default function TransactionsTable({ transactions }: Props) {
           .txn-table { display: none !important; }
           .txn-cards { display: flex !important; }
         }
+        .txn-row:hover { background: rgba(255,255,255,0.04) !important; }
+        .txn-card-mobile:hover { background: rgba(255,255,255,0.03) !important; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
         option { background: #1e293b; color: #f1f5f9; }
       `}</style>

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Transaction } from '@/types'
@@ -5,14 +6,15 @@ import type { Transaction } from '@/types'
 async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: txns } = await supabase
     .from('transactions')
-    .select('type, amount, date, description, category, payment_method')
+    .select('*')
     .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
 
   const totalIn = txns?.filter(t => t.type === 'money_in').reduce((sum, t) => sum + t.amount, 0) ?? 0
   const totalOut = txns?.filter(t => t.type === 'money_out').reduce((sum, t) => sum + t.amount, 0) ?? 0
   const balance = totalIn - totalOut
   const count = txns?.length ?? 0
-  const recent = txns?.slice(0, 6) ?? []
+  const recent = txns?.slice(0, 8) ?? []
 
   return { totalIn, totalOut, balance, count, recent }
 }
@@ -139,35 +141,62 @@ export default async function DashboardPage() {
         {recent.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
             <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
-            <p style={{ fontSize: 14, color: '#475569' }}>No transactions yet</p>
+            <p style={{ fontSize: 14, color: '#475569' }}>No transactions yet. Add your first via Money In or Money Out.</p>
           </div>
         ) : (
           <div>
-            {recent.map((t: { type: string; amount: number; date: string; description?: string; category?: string; payment_method?: string }, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 14,
-                padding: '14px 20px',
-                borderBottom: i < recent.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none'
-              }}>
+            {recent.map((t: Transaction, i) => (
+              <Link key={t.id} href={`/transactions/${t.id}`} style={{ textDecoration: 'none' }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: t.type === 'money_in' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.12)',
-                  fontSize: 16, fontWeight: 700,
-                  color: t.type === 'money_in' ? '#10b981' : '#f87171'
-                }}>
-                  {t.type === 'money_in' ? '↑' : '↓'}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {t.description || (t.type === 'money_in' ? t.payment_method : t.category) || '—'}
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 20px',
+                  borderBottom: i < recent.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  cursor: 'pointer', transition: 'background 0.15s',
+                }} className="dash-row">
+                  {/* Icon */}
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: t.type === 'money_in' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.12)',
+                    fontSize: 16, fontWeight: 700,
+                    color: t.type === 'money_in' ? '#10b981' : '#f87171'
+                  }}>
+                    {t.type === 'money_in' ? '↑' : '↓'}
                   </div>
-                  <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{formatDate(t.date)}</div>
+                  {/* Main info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {t.description || (t.type === 'money_in' ? t.payment_method : t.category) || '—'}
+                      </div>
+                      {t.proof_url && <span style={{ fontSize: 10, color: '#60a5fa', flexShrink: 0 }}>📎</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, color: '#475569' }}>{formatDate(t.date)}</span>
+                      {(t.payment_method || t.category) && (
+                        <span style={{ fontSize: 11, color: '#334155', background: 'rgba(255,255,255,0.04)', padding: '1px 7px', borderRadius: 4 }}>
+                          {t.payment_method || t.category}
+                        </span>
+                      )}
+                      {t.reference_number && (
+                        <span style={{ fontSize: 11, color: '#334155', fontFamily: 'monospace' }}>
+                          {t.reference_number}
+                        </span>
+                      )}
+                      {t.project_purpose && (
+                        <span style={{ fontSize: 11, color: '#334155' }}>{t.project_purpose}</span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Amount + arrow */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: t.type === 'money_in' ? '#10b981' : '#f87171' }}>
+                      {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#334155', marginTop: 2 }}>→</div>
+                  </div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: t.type === 'money_in' ? '#10b981' : '#f87171', flexShrink: 0 }}>
-                  {t.type === 'money_in' ? '+' : '-'}{formatCurrency(t.amount)}
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
@@ -177,6 +206,7 @@ export default async function DashboardPage() {
         @media (min-width: 640px) {
           .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
         }
+        .dash-row:hover { background: rgba(255,255,255,0.04) !important; }
       `}</style>
     </div>
   )
