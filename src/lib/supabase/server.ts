@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -24,12 +25,11 @@ export async function createClient() {
   )
 }
 
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-
-// Service role client — bypasses RLS, only use server-side
+// Uses anon key — safe because RLS is open for this private admin app
+// and the API route verifies the cabana_auth cookie before any DB call
 export function createServiceClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
