@@ -4,105 +4,133 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-const navItems = [
+const nav = [
   {
     href: '/dashboard', label: 'Dashboard',
-    icon: <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
+    icon: <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-3a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" /></svg>,
   },
   {
     href: '/money-in', label: 'Money In',
-    icon: <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>,
+    icon: <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4v16m0-16l-4 4m4-4l4 4" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 17h18" /></svg>,
   },
   {
     href: '/money-out', label: 'Money Out',
-    icon: <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" /></svg>,
+    icon: <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 20V4m0 16l-4-4m4 4l4-4" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7h18" /></svg>,
   },
   {
     href: '/transactions', label: 'Transactions',
-    icon: <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>,
+    icon: <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" /></svg>,
   },
   {
-    href: '/reports', label: 'Reports',
-    icon: <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+    href: '/reports', label: 'Reports & Export',
+    icon: <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
   },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  async function handleSignOut() {
+  async function signOut() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
     router.refresh()
   }
 
-  const Nav = () => (
+  const Content = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+
+      {/* Brand */}
+      <div style={{ padding: '22px 20px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
           <div style={{
-            width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+            width: 38, height: 38, borderRadius: 11, flexShrink: 0,
             background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(16,185,129,0.3)',
+            boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
           }}>
-            <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24">
+            <svg width="19" height="19" fill="none" stroke="white" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <div style={{ fontWeight: 700, color: '#f1f5f9', fontSize: 14 }}>Cabana Finance</div>
-            <div style={{ fontSize: 11, color: '#10b981', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 1 }}>Investment Tracker</div>
+            <div style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 800, fontSize: 15, color: '#f8fafc', letterSpacing: '-0.3px' }}>
+              Cabana Finance
+            </div>
+            <div style={{ fontSize: 10, color: '#10b981', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: 1 }}>
+              Investment Tracker
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Divider */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '0 16px' }} />
+
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {navItems.map(item => {
-          const active = pathname === item.href
+      <nav style={{ flex: 1, padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '1px', padding: '2px 12px', marginBottom: 4 }}>Menu</div>
+        {nav.map(item => {
+          const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
-            <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} style={{
+            <Link key={item.href} href={item.href} onClick={() => setOpen(false)} style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 12px', borderRadius: 10, fontSize: 14,
-              fontWeight: active ? 600 : 500, textDecoration: 'none',
-              background: active ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
-              color: active ? 'white' : '#94a3b8',
-              boxShadow: active ? '0 4px 14px rgba(16,185,129,0.25)' : 'none',
+              padding: '9px 12px', borderRadius: 11, fontSize: 13.5,
+              fontWeight: active ? 600 : 400, textDecoration: 'none',
+              background: active
+                ? 'linear-gradient(135deg, rgba(16,185,129,0.18) 0%, rgba(5,150,105,0.10) 100%)'
+                : 'transparent',
+              color: active ? '#34d399' : '#64748b',
+              border: active ? '1px solid rgba(16,185,129,0.22)' : '1px solid transparent',
               transition: 'all 0.15s',
-            }}>
-              {item.icon}
+              position: 'relative',
+            }}
+            className="nav-link"
+            >
+              <span style={{ opacity: active ? 1 : 0.7 }}>{item.icon}</span>
               {item.label}
+              {active && (
+                <span style={{
+                  marginLeft: 'auto', width: 5, height: 5, borderRadius: '50%',
+                  background: '#10b981', boxShadow: '0 0 8px #10b981',
+                }} />
+              )}
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer */}
-      <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 4 }}>
+      {/* Divider */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '0 16px' }} />
+
+      {/* User + sign out */}
+      <div style={{ padding: '14px 10px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 12px', borderRadius: 11, marginBottom: 4,
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.05)',
+        }}>
           <div style={{
             width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
             background: 'linear-gradient(135deg, #10b981, #059669)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 12, fontWeight: 700, color: 'white',
+            fontSize: 13, fontWeight: 700, color: 'white', fontFamily: 'Manrope,sans-serif',
           }}>C</div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>Cabana Admin</div>
-            <div style={{ fontSize: 11, color: '#475569' }}>Founder</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', letterSpacing: '-0.1px' }}>Cabana Admin</div>
+            <div style={{ fontSize: 11, color: '#10b981', fontWeight: 500 }}>Founder</div>
           </div>
         </div>
-        <button onClick={handleSignOut} style={{
+        <button onClick={signOut} className="nav-link" style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 12px', borderRadius: 10, fontSize: 14, fontWeight: 500,
-          color: '#64748b', background: 'none', border: 'none', cursor: 'pointer',
+          padding: '9px 12px', borderRadius: 11, fontSize: 13, fontWeight: 400,
+          color: '#475569', background: 'none', border: '1px solid transparent', cursor: 'pointer',
           transition: 'all 0.15s', textAlign: 'left',
         }}>
-          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           Sign Out
         </button>
@@ -113,64 +141,58 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile topbar */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30,
-        background: 'rgba(10,15,30,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(12px)', padding: '12px 16px',
+      <div className="hide-desktop" style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
+        background: 'rgba(8,13,26,0.92)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(16px)', padding: '12px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }} className="mobile-topbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 9,
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 9, background: 'linear-gradient(135deg,#10b981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(16,185,129,0.3)' }}>
+            <svg width="15" height="15" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
-          <span style={{ fontWeight: 700, color: '#f1f5f9', fontSize: 14 }}>Cabana Finance</span>
+          <span style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 800, color: '#f8fafc', fontSize: 14 }}>Cabana Finance</span>
         </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} style={{
-          padding: 8, borderRadius: 8, background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', color: '#94a3b8',
-        }}>
+        <button onClick={() => setOpen(!open)} style={{ padding: '7px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', color: '#94a3b8', lineHeight: 0 }}>
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {mobileOpen
-              ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
+            {open ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
           </svg>
         </button>
       </div>
 
-      {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{
-        position: 'fixed', inset: 0, zIndex: 20, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)',
-      }} />}
+      {/* Mobile overlay */}
+      {open && <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 30, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(3px)' }} />}
 
-      <div style={{
-        position: 'fixed', top: 0, left: 0, zIndex: 25, width: 256, height: '100%',
-        background: '#0a0f1e', borderRight: '1px solid rgba(255,255,255,0.06)',
-        transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 0.2s ease', paddingTop: 56,
-      }} className="mobile-drawer">
-        <Nav />
+      {/* Mobile drawer */}
+      <div className="hide-desktop" style={{
+        position: 'fixed', top: 0, left: 0, zIndex: 35, width: 260, height: '100%',
+        background: '#080d1a', borderRight: '1px solid rgba(255,255,255,0.06)',
+        transform: open ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.22s cubic-bezier(.22,.68,0,1.2)',
+        paddingTop: 54,
+      }}>
+        <Content />
       </div>
 
-      {/* Desktop */}
-      <aside style={{
-        width: 240, background: '#0a0f1e', borderRight: '1px solid rgba(255,255,255,0.06)',
+      {/* Desktop sidebar */}
+      <aside className="hide-mobile" style={{
+        width: 238, background: '#080d1a', borderRight: '1px solid rgba(255,255,255,0.05)',
         display: 'flex', flexDirection: 'column', flexShrink: 0,
-      }} className="desktop-sidebar">
-        <Nav />
+        position: 'relative', zIndex: 10,
+      }}>
+        {/* Subtle top glow */}
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 120, height: 1, background: 'linear-gradient(90deg, transparent, #10b981, transparent)' }} />
+        <Content />
       </aside>
 
       <style>{`
+        .nav-link:hover { background: rgba(255,255,255,0.04) !important; color: #94a3b8 !important; border-color: rgba(255,255,255,0.05) !important; }
+        .hide-mobile { display: flex !important; }
+        .hide-desktop { display: none !important; }
         @media (max-width: 768px) {
-          .desktop-sidebar { display: none !important; }
-        }
-        @media (min-width: 769px) {
-          .mobile-topbar { display: none !important; }
-          .mobile-drawer { display: none !important; }
+          .hide-mobile { display: none !important; }
+          .hide-desktop { display: flex !important; }
         }
       `}</style>
     </>
