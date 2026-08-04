@@ -4,30 +4,25 @@ import type { Transaction } from '@/types'
 
 export default async function ReportsPage() {
   const supabase = await createClient()
-  const { data: transactions } = await supabase
-    .from('transactions').select('*').order('date', { ascending: true })
-
+  const { data } = await supabase.from('transactions').select('*').order('date',{ascending:true})
   let running = 0
-  const withBalance = (transactions ?? []).map((t: Transaction) => {
-    if (t.type === 'money_in') running += t.amount
-    else running -= t.amount
+  const withBalance = (data??[]).map((t:Transaction) => {
+    running += t.type==='money_in' ? t.amount : -t.amount
     return { ...t, running_balance: running }
   })
-
-  const totalIn = (transactions ?? []).filter((t: Transaction) => t.type === 'money_in').reduce((s: number, t: Transaction) => s + t.amount, 0)
-  const totalOut = (transactions ?? []).filter((t: Transaction) => t.type === 'money_out').reduce((s: number, t: Transaction) => s + t.amount, 0)
+  const totalIn  = (data??[]).filter((t:Transaction)=>t.type==='money_in').reduce((s:number,t:Transaction)=>s+t.amount,0)
+  const totalOut = (data??[]).filter((t:Transaction)=>t.type==='money_out').reduce((s:number,t:Transaction)=>s+t.amount,0)
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '-0.4px' }}>
-          Reports
+    <div className="page-in" style={{ paddingBottom:48 }}>
+      <div style={{ marginBottom:28 }}>
+        <p className="section-label" style={{ marginBottom:6 }}>Export</p>
+        <h1 style={{ fontFamily:'Manrope,sans-serif', fontSize:28, fontWeight:900, color:'#f0f6ff', letterSpacing:'-0.6px', marginBottom:8 }}>
+          Reports & Export
         </h1>
-        <p style={{ fontSize: 14, color: '#475569', marginTop: 4 }}>
-          Export all transaction data
-        </p>
+        <p style={{ color:'var(--t3)', fontSize:13.5 }}>Download the full investment record in Excel, CSV, or PDF format for investor review.</p>
       </div>
-      <ReportsClient transactions={withBalance} totalIn={totalIn} totalOut={totalOut} balance={totalIn - totalOut} />
+      <ReportsClient transactions={withBalance} totalIn={totalIn} totalOut={totalOut} balance={totalIn-totalOut} />
     </div>
   )
 }

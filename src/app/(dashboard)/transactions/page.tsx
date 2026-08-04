@@ -4,27 +4,23 @@ import type { Transaction } from '@/types'
 
 export default async function TransactionsPage() {
   const supabase = await createClient()
-  const { data: transactions } = await supabase
-    .from('transactions').select('*')
-    .order('date', { ascending: true })
-    .order('created_at', { ascending: true })
+  const { data } = await supabase.from('transactions').select('*')
+    .order('date',{ascending:true}).order('created_at',{ascending:true})
 
   let running = 0
-  const withBalance = (transactions ?? []).map((t: Transaction) => {
-    if (t.type === 'money_in') running += t.amount
-    else running -= t.amount
+  const withBalance = (data ?? []).map((t:Transaction) => {
+    running += t.type === 'money_in' ? t.amount : -t.amount
     return { ...t, running_balance: running }
   }).reverse()
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '-0.4px' }}>
+    <div className="page-in" style={{ paddingBottom:48 }}>
+      <div style={{ marginBottom:28 }}>
+        <p className="section-label" style={{ marginBottom:6 }}>History</p>
+        <h1 style={{ fontFamily:'Manrope,sans-serif', fontSize:28, fontWeight:900, color:'#f0f6ff', letterSpacing:'-0.6px', marginBottom:8 }}>
           Transaction History
         </h1>
-        <p style={{ fontSize: 14, color: '#475569', marginTop: 4 }}>
-          All money in and money out with running balance
-        </p>
+        <p style={{ color:'var(--t3)', fontSize:13.5 }}>Every money movement — searchable, filterable, and fully auditable. Click any row for complete details.</p>
       </div>
       <TransactionsTable transactions={withBalance} />
     </div>

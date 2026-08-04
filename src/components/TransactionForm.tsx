@@ -1,51 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import type { TransactionType } from '@/types'
 
-const MONEY_IN_METHODS = ['M-Pesa', 'Bank Transfer', 'Cash', 'Cheque', 'Crypto', 'Other']
-const MONEY_OUT_CATEGORIES = [
-  'Salaries & Payroll', 'Rent & Office', 'Marketing & Ads',
-  'Technology & Software', 'Travel & Transport', 'Legal & Compliance',
-  'Equipment & Hardware', 'Utilities', 'Operations', 'Other',
-]
+const MONEY_IN_METHODS  = ['M-Pesa','Bank Transfer','Cash','Cheque','Crypto','Other']
+const MONEY_OUT_CATS    = ['Salaries & Payroll','Rent & Office','Marketing & Ads','Technology & Software','Travel & Transport','Legal & Compliance','Equipment & Hardware','Utilities','Operations','Other']
 
-const FIXED_USER_ID = '1be5b2ed-fa7f-4d62-98be-5b97500c6e70' // admin@cabanafinance.co
+const inp: React.CSSProperties = {
+  width:'100%', background:'rgba(10,16,32,0.85)', backdropFilter:'blur(8px)',
+  border:'1.5px solid rgba(255,255,255,0.08)', borderRadius:12,
+  padding:'12px 14px', fontSize:14, color:'#f0f6ff', outline:'none',
+  fontFamily:'Inter,sans-serif', transition:'border-color 0.18s, box-shadow 0.18s',
+  boxSizing:'border-box',
+}
 
 interface Props { type: TransactionType }
 
-const S = {
-  label: { fontSize: 13, fontWeight: 600, color: '#94a3b8', marginBottom: 6, display: 'block', letterSpacing: '0.2px' } as React.CSSProperties,
-  input: {
-    width: '100%', background: 'rgba(30,41,59,0.8)', border: '1.5px solid rgba(51,65,85,0.8)',
-    borderRadius: 10, padding: '12px 14px', fontSize: 15, color: '#f1f5f9', outline: 'none',
-    transition: 'border-color 0.2s', WebkitAppearance: 'none', boxSizing: 'border-box',
-  } as React.CSSProperties,
-  select: {
-    width: '100%', background: 'rgba(30,41,59,0.8)', border: '1.5px solid rgba(51,65,85,0.8)',
-    borderRadius: 10, padding: '12px 14px', fontSize: 15, color: '#f1f5f9', outline: 'none',
-    cursor: 'pointer', boxSizing: 'border-box',
-  } as React.CSSProperties,
-  textarea: {
-    width: '100%', background: 'rgba(30,41,59,0.8)', border: '1.5px solid rgba(51,65,85,0.8)',
-    borderRadius: 10, padding: '12px 14px', fontSize: 15, color: '#f1f5f9', outline: 'none',
-    resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
-  } as React.CSSProperties,
-  row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } as React.CSSProperties,
-  field: { display: 'flex', flexDirection: 'column' as const },
-}
-
 export default function TransactionForm({ type }: Props) {
-  const router = useRouter()
+  const router  = useRouter()
   const supabase = createClient()
-  const isIn = type === 'money_in'
-
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
-  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [loading, setLoading]     = useState(false)
+  const [success, setSuccess]     = useState(false)
+  const [error, setError]         = useState('')
+  const [proofFile, setProofFile] = useState<File|null>(null)
+  const [dragOver, setDragOver]   = useState(false)
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
     amount: '',
@@ -57,217 +37,186 @@ export default function TransactionForm({ type }: Props) {
     notes: '',
   })
 
-  const set = (key: string, value: string) => setForm(p => ({ ...p, [key]: value }))
+  const set = (k:string, v:string) => setForm(p => ({...p,[k]:v}))
+  const isIn = type === 'money_in'
+  const accent = isIn ? 'var(--green)' : 'var(--red)'
+  const accentDim = isIn ? 'rgba(14,207,142,0.1)' : 'rgba(255,107,138,0.08)'
+  const accentBorder = isIn ? 'rgba(14,207,142,0.22)' : 'rgba(255,107,138,0.2)'
 
-  const focusStyle = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    e.target.style.borderColor = isIn ? '#10b981' : '#f87171'
-    e.target.style.boxShadow = isIn ? '0 0 0 3px rgba(16,185,129,0.12)' : '0 0 0 3px rgba(248,113,113,0.12)'
+  function focusGreen(e: React.FocusEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) {
+    e.target.style.borderColor = isIn ? 'var(--green)' : 'var(--red)'
+    e.target.style.boxShadow   = isIn ? '0 0 0 3px rgba(14,207,142,0.14)' : '0 0 0 3px rgba(255,107,138,0.14)'
   }
-  const blurStyle = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    e.target.style.borderColor = 'rgba(51,65,85,0.8)'
-    e.target.style.boxShadow = 'none'
+  function blurReset(e: React.FocusEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) {
+    e.target.style.borderColor = 'rgba(255,255,255,0.08)'
+    e.target.style.boxShadow   = 'none'
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault(); setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) setProofFile(file)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
-    setError('')
-
+    setLoading(true); setError('')
     try {
-      let proof_url = null
-      let proof_filename = null
-
+      let proof_url = null, proof_filename = null
       if (proofFile) {
         const ext = proofFile.name.split('.').pop()
         const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('transaction-proofs')
-          .upload(filename, proofFile)
-        if (uploadError) throw new Error('Failed to upload proof: ' + uploadError.message)
-        proof_url = uploadData.path
-        proof_filename = proofFile.name
+        const { data: up, error: ue } = await supabase.storage.from('transaction-proofs').upload(filename, proofFile)
+        if (ue) throw new Error('Proof upload failed: ' + ue.message)
+        proof_url = up.path; proof_filename = proofFile.name
       }
-
-      const payload: Record<string, unknown> = {
-        type,
-        date: form.date,
-        amount: parseFloat(form.amount),
-        description: form.description || null,
-        notes: form.notes || null,
-        proof_url,
-        proof_filename,
-        created_by: FIXED_USER_ID,
+      const payload: Record<string,unknown> = {
+        type, date:form.date, amount:parseFloat(form.amount),
+        description:form.description||null, notes:form.notes||null,
+        proof_url, proof_filename, created_by:'cabana-admin',
       }
+      if (isIn) { payload.payment_method=form.payment_method; payload.reference_number=form.reference_number||null }
+      else       { payload.category=form.category; payload.project_purpose=form.project_purpose||null }
 
-      if (isIn) {
-        payload.payment_method = form.payment_method
-        payload.reference_number = form.reference_number || null
-      } else {
-        payload.category = form.category
-        payload.project_purpose = form.project_purpose || null
-      }
-
-      const res = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || 'Failed to save transaction')
-      }
-
+      const res = await fetch('/api/transactions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error||'Insert failed')
       setSuccess(true)
-      setTimeout(() => { router.push('/transactions'); router.refresh() }, 1200)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setLoading(false)
-    }
+      setTimeout(()=>{ router.push('/transactions'); router.refresh() }, 1400)
+    } catch(e:unknown) {
+      setError(e instanceof Error ? e.message : 'Something went wrong')
+    } finally { setLoading(false) }
   }
 
-  const accentColor = isIn ? '#10b981' : '#f87171'
-  const btnBg = isIn
-    ? 'linear-gradient(135deg, #10b981, #059669)'
-    : 'linear-gradient(135deg, #ef4444, #dc2626)'
-
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
       {/* Date + Amount */}
-      <div style={S.row} className="form-row">
-        <div style={S.field}>
-          <label style={S.label}>Date *</label>
-          <input type="date" required value={form.date}
-            onChange={e => set('date', e.target.value)}
-            onFocus={focusStyle} onBlur={blurStyle}
-            style={S.input} />
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="form-2col">
+        <div>
+          <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Date *</label>
+          <input type="date" required value={form.date} onChange={e=>set('date',e.target.value)}
+            style={inp} onFocus={focusGreen} onBlur={blurReset} />
         </div>
-        <div style={S.field}>
-          <label style={S.label}>Amount (KES) *</label>
-          <input type="number" required min="1" step="0.01" value={form.amount}
-            onChange={e => set('amount', e.target.value)}
-            placeholder="0.00"
-            onFocus={focusStyle} onBlur={blurStyle}
-            style={S.input} />
+        <div>
+          <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Amount (KES) *</label>
+          <input type="number" required min="1" step="0.01" value={form.amount} onChange={e=>set('amount',e.target.value)}
+            placeholder="0.00" style={inp} onFocus={focusGreen} onBlur={blurReset} />
         </div>
       </div>
 
       {/* Type-specific */}
       {isIn ? (
-        <div style={S.row} className="form-row">
-          <div style={S.field}>
-            <label style={S.label}>Payment Method *</label>
-            <select value={form.payment_method} onChange={e => set('payment_method', e.target.value)}
-              onFocus={focusStyle} onBlur={blurStyle} style={S.select}>
-              {MONEY_IN_METHODS.map(m => <option key={m}>{m}</option>)}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="form-2col">
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Payment Method *</label>
+            <select value={form.payment_method} onChange={e=>set('payment_method',e.target.value)}
+              style={inp} onFocus={focusGreen} onBlur={blurReset}>
+              {MONEY_IN_METHODS.map(m=><option key={m}>{m}</option>)}
             </select>
           </div>
-          <div style={S.field}>
-            <label style={S.label}>Reference Number</label>
-            <input type="text" value={form.reference_number}
-              onChange={e => set('reference_number', e.target.value)}
-              placeholder="e.g. QAB1234XYZ"
-              onFocus={focusStyle} onBlur={blurStyle}
-              style={S.input} />
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Reference Number</label>
+            <input type="text" value={form.reference_number} onChange={e=>set('reference_number',e.target.value)}
+              placeholder="e.g. QAB1234XYZ" style={inp} onFocus={focusGreen} onBlur={blurReset} />
           </div>
         </div>
       ) : (
-        <div style={S.row} className="form-row">
-          <div style={S.field}>
-            <label style={S.label}>Category *</label>
-            <select value={form.category} onChange={e => set('category', e.target.value)}
-              onFocus={focusStyle} onBlur={blurStyle} style={S.select}>
-              {MONEY_OUT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="form-2col">
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Category *</label>
+            <select value={form.category} onChange={e=>set('category',e.target.value)}
+              style={inp} onFocus={focusGreen} onBlur={blurReset}>
+              {MONEY_OUT_CATS.map(c=><option key={c}>{c}</option>)}
             </select>
           </div>
-          <div style={S.field}>
-            <label style={S.label}>Project / Purpose</label>
-            <input type="text" value={form.project_purpose}
-              onChange={e => set('project_purpose', e.target.value)}
-              placeholder="e.g. Website development"
-              onFocus={focusStyle} onBlur={blurStyle}
-              style={S.input} />
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Project / Purpose</label>
+            <input type="text" value={form.project_purpose} onChange={e=>set('project_purpose',e.target.value)}
+              placeholder="e.g. Website development" style={inp} onFocus={focusGreen} onBlur={blurReset} />
           </div>
         </div>
       )}
 
       {/* Description */}
-      <div style={S.field}>
-        <label style={S.label}>Description</label>
-        <input type="text" value={form.description}
-          onChange={e => set('description', e.target.value)}
-          placeholder={isIn ? 'e.g. Seed round tranche 1' : 'e.g. Monthly office rent - July 2026'}
-          onFocus={focusStyle} onBlur={blurStyle}
-          style={S.input} />
+      <div>
+        <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Description</label>
+        <input type="text" value={form.description} onChange={e=>set('description',e.target.value)}
+          placeholder={isIn ? 'e.g. Seed round — Tranche 1' : 'e.g. Monthly AWS cloud bill — Jul 2026'}
+          style={inp} onFocus={focusGreen} onBlur={blurReset} />
       </div>
 
       {/* Notes */}
-      <div style={S.field}>
-        <label style={S.label}>Notes</label>
-        <textarea value={form.notes} onChange={e => set('notes', e.target.value)}
-          rows={3} placeholder="Any additional context..."
-          onFocus={focusStyle} onBlur={blurStyle}
-          style={S.textarea} />
+      <div>
+        <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>Notes</label>
+        <textarea value={form.notes} onChange={e=>set('notes',e.target.value)} rows={3}
+          placeholder="Any additional context or remarks…"
+          style={{ ...inp, resize:'none', fontFamily:'Inter,sans-serif' } as React.CSSProperties}
+          onFocus={focusGreen} onBlur={blurReset} />
       </div>
 
-      {/* Proof Upload */}
-      <div style={S.field}>
-        <label style={S.label}>
-          Upload Proof {isIn ? '(Receipt, Bank slip, M-Pesa screenshot)' : '(Receipt or Invoice)'}
+      {/* Proof Upload — drag & drop */}
+      <div>
+        <label style={{ fontSize:11, fontWeight:700, color:'var(--t3)', textTransform:'uppercase', letterSpacing:'1px', display:'block', marginBottom:8 }}>
+          Upload Proof {isIn ? '(Receipt / Bank slip / M-Pesa screenshot)' : '(Receipt / Invoice)'}
         </label>
-        <label style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          height: 96, border: `2px dashed ${proofFile ? accentColor : 'rgba(51,65,85,0.6)'}`,
-          borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
-          background: proofFile ? `rgba(${isIn ? '16,185,129' : '239,68,68'},0.06)` : 'rgba(30,41,59,0.4)',
-        }}>
+        <label
+          onDragOver={e=>{e.preventDefault();setDragOver(true)}}
+          onDragLeave={()=>setDragOver(false)}
+          onDrop={handleDrop}
+          style={{
+            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8,
+            minHeight:110, borderRadius:14, cursor:'pointer', transition:'all 0.18s',
+            border:`2px dashed ${proofFile ? accent : dragOver ? accent : 'rgba(255,255,255,0.1)'}`,
+            background: proofFile ? accentDim : dragOver ? accentDim : 'rgba(255,255,255,0.02)',
+            boxShadow: dragOver ? `0 0 0 4px ${accentBorder}` : 'none',
+          }}
+        >
           {proofFile ? (
             <>
-              <div style={{ fontSize: 13, fontWeight: 600, color: accentColor }}>✓ {proofFile.name}</div>
-              <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>{(proofFile.size / 1024).toFixed(0)} KB · tap to change</div>
+              <div style={{ fontSize:28 }}>{proofFile.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? '🖼' : '📄'}</div>
+              <div style={{ fontSize:13, color:accent, fontWeight:700 }}>✓ {proofFile.name}</div>
+              <div style={{ fontSize:11, color:'var(--t3)' }}>{(proofFile.size/1024).toFixed(0)} KB — tap to change</div>
             </>
           ) : (
             <>
-              <div style={{ fontSize: 22, marginBottom: 6 }}>📎</div>
-              <div style={{ fontSize: 13, color: '#64748b' }}>Tap to upload file</div>
-              <div style={{ fontSize: 11, color: '#334155', marginTop: 3 }}>PNG, JPG, PDF up to 10MB</div>
+              <div style={{ fontSize:28, opacity:0.5 }}>📎</div>
+              <div style={{ fontSize:13, color:'var(--t3)', fontWeight:600 }}>Drop file here or click to browse</div>
+              <div style={{ fontSize:11, color:'var(--t4)' }}>PNG, JPG, PDF — up to 10 MB</div>
             </>
           )}
-          <input type="file" style={{ display: 'none' }} accept="image/*,application/pdf"
-            onChange={e => setProofFile(e.target.files?.[0] || null)} />
+          <input type="file" style={{ display:'none' }} accept="image/*,application/pdf"
+            onChange={e=>setProofFile(e.target.files?.[0]||null)} />
         </label>
       </div>
 
+      {/* Feedback */}
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#fca5a5' }}>
+        <div style={{ background:'rgba(255,107,138,0.08)', border:'1px solid rgba(255,107,138,0.2)', borderRadius:12, padding:'12px 16px', color:'#ff9ab3', fontSize:13, display:'flex', gap:8 }}>
           ⚠ {error}
         </div>
       )}
-
       {success && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#6ee7b7' }}>
-          ✓ Recorded successfully! Redirecting to transactions...
+        <div style={{ background:'rgba(14,207,142,0.08)', border:'1px solid rgba(14,207,142,0.22)', borderRadius:12, padding:'12px 16px', color:'#4dffc0', fontSize:13, display:'flex', gap:8, alignItems:'center' }}>
+          <span style={{ fontSize:18 }}>✓</span> Transaction recorded! Redirecting…
         </div>
       )}
 
-      <button type="submit" disabled={loading || success} style={{
-        width: '100%', background: btnBg, color: 'white', border: 'none',
-        borderRadius: 12, padding: '15px', fontSize: 15, fontWeight: 700,
-        cursor: loading || success ? 'not-allowed' : 'pointer',
-        opacity: loading || success ? 0.7 : 1,
-        boxShadow: isIn ? '0 8px 24px rgba(16,185,129,0.25)' : '0 8px 24px rgba(239,68,68,0.2)',
-        transition: 'all 0.2s',
-      }}>
-        {loading ? 'Saving…' : `Record ${isIn ? 'Investment' : 'Expense'}`}
+      <button type="submit" disabled={loading||success} className={`btn ${isIn?'btn-primary':'btn-danger'}`}
+        style={{ width:'100%', padding:'14px', fontSize:15, borderRadius:12, marginTop:4,
+          ...(isIn ? {} : { background:'linear-gradient(135deg,#ff6b8a,#e53e6a)', color:'white', border:'none', boxShadow:'0 4px 16px rgba(255,107,138,0.28)' })
+        }}>
+        {loading ? (
+          <span style={{ display:'flex', alignItems:'center', gap:9, justifyContent:'center' }}>
+            <span style={{ width:15, height:15, border:`2px solid rgba(${isIn?'0,0,0':'255,255,255'},0.2)`, borderTopColor:isIn?'#021a10':'white', borderRadius:'50%', display:'inline-block', animation:'spin 0.7s linear infinite' }} />
+            Saving…
+          </span>
+        ) : `Record ${isIn ? 'Investment' : 'Expense'}`}
       </button>
 
       <style>{`
-        @media (max-width: 600px) {
-          .form-row { grid-template-columns: 1fr !important; }
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
-        option { background: #1e293b; color: #f1f5f9; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        @media (max-width:500px) { .form-2col { grid-template-columns:1fr !important; } }
       `}</style>
     </form>
   )
